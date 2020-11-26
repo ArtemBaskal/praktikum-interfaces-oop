@@ -1,8 +1,112 @@
 import Card from './Card.js';
 import FormValidator from './FormValidator.js';
+import Section from './Section.js';
 
-const ESC_KEYCODE = 27;
-// Константы
+class Popup {
+  /* TODO: rename to private props */
+  constructor(popupSelector) {
+    this.popup = document.querySelector(popupSelector);
+    this.closeIcon = this.popup.querySelector('.popup__close');
+    this.setEventListeners();
+  }
+
+  open = () => {
+    this.popup.classList.add('popup_is-opened');
+    document.addEventListener('keydown', this._handleEscClose);
+  }
+
+  close = () => {
+    this.popup.classList.remove('popup_is-opened');
+    document.removeEventListener('keydown', this._handleEscClose);
+  }
+
+  _handleEscClose = (evt) => {
+    if (evt.key === "Escape") {
+      this.close();
+    }
+  }
+
+  setEventListeners(){
+    this.closeIcon.addEventListener('click', this.close);
+  }
+}
+
+class PopupWithForm extends Popup {
+  constructor(popupSelector, formSubmitCallback) {
+    super(popupSelector);
+    this.setEventListeners();
+    this.formSubmitCallback = formSubmitCallback;
+  }
+
+  _getInputValues(evt) {
+    /* TODO: simplify? */
+    return Array.from(evt.target.elements).filter(({tagName}) => tagName === "INPUT")
+      .reduce((acc, { name, value }) => {
+        acc[name] = value;
+        return acc
+      }, {})
+  }
+
+   _onSubmit = (evt) => {
+    debugger
+    const values = this._getInputValues(evt);
+    this.formSubmitCallback(values);
+    this.close();
+  };
+
+  setEventListeners() {
+    super.setEventListeners();
+    this.popup.addEventListener('submit', this._onSubmit);
+  }
+
+  close = () => {
+    this.popup.classList.remove('popup_is-opened');
+    document.removeEventListener('keydown', this._handleEscClose);
+
+    this.popup.removeEventListener('submit', this._onSubmit);
+    this.popup.querySelector('.popup__form').reset();
+  }
+}
+
+class PopupWithImage extends Popup {
+  constructor(popupSelector, src, name) {
+    super(popupSelector);
+    this.src = src;
+    this.name = name;
+  }
+
+  open = () => {
+    this.popup.classList.add('popup_is-opened');
+    document.addEventListener('keydown', this._handleEscClose);
+
+    this.popup.querySelector('.popup__image').src = this.src;
+    this.popup.querySelector('.popup__caption').textContent = this.name;
+  }
+}
+
+class UserInfo {
+  constructor({nameSelector, descriptionSelector}) {
+    this.name = document.querySelector(nameSelector);
+    this.description = document.querySelector(descriptionSelector);
+  }
+
+  /* TODO: fill in form on open? */
+  getUserInfo() {
+    return {
+      name: this.name,
+      description: this.description,
+    }
+  }
+
+  /**
+   * @param name {string}
+   * @param description {sring}
+   */
+  setUserInfo({name, description}) {
+    this.name.textContent = name;
+    this.description.textContent = description;
+  }
+}
 
 const initialCards = [
   {
@@ -31,118 +135,45 @@ const initialCards = [
   }
 ];
 
-// Врапперы
 const placesWrap = document.querySelector('.places__list');
-const editFormModalWindow = document.querySelector('.popup_type_edit');
-const cardFormModalWindow = document.querySelector('.popup_type_new-card');
-const imageModalWindow = document.querySelector('.popup_type_image');
-// С submit ребята еще плохо работают.
-
-// Кнопки и прочие дом узлы
-const openEditFormButton = document.querySelector('.profile__edit-button');
-const openCardFormButton = document.querySelector('.profile__add-button');
-
-// DOM узлы профиля
-const profileTitle = document.querySelector('.profile__title');
-const profileDescription = document.querySelector('.profile__description');
-
-// Данные форм и элементы форм
-const titleInputValue = editFormModalWindow.querySelector('.popup__input_type_name');
-const descriptionInputValue = editFormModalWindow.querySelector('.popup__input_type_description');
-const cardNameInputValue = cardFormModalWindow.querySelector('.popup__input_type_card-name');
-const cardLinkInputValue = cardFormModalWindow.querySelector('.popup__input_type_url');
-// решение на минималках. Конечно, студент может корректно обобрать велью инпутов в форме.
-
-const cardSelector = '.card-template';
-const defaultFormConfig = {
-  formSelector: '.popup__form',
-  inputSelector: '.popup__input',
-  submitButtonSelector: '.popup__button',
-  inactiveButtonClass: 'popup__button_disabled',
-  inputErrorClass: 'popup__input_type_error',
-  errorClass: 'popup__error_visible'
-};
-
-const isEscEvent = (evt, action) => {
-  const activePopup = document.querySelector('.popup_is-opened');
-  if (evt.which === ESC_KEYCODE) {
-    action(activePopup);
-  }
-};
-
-const openModalWindow = (modalWindow) => {
-  modalWindow.classList.add('popup_is-opened');
-  document.addEventListener('keyup', handleEscUp);
-};
-
-const closeModalWindow = (modalWindow) => {
-  modalWindow.classList.remove('popup_is-opened');
-  document.removeEventListener('keyup', handleEscUp);
-};
 
 const renderCard = (data, wrap) => {
-  const card = new Card(data, cardSelector);
+  const cardSelector = '.card-template';
+  const handleCardClick = (src, name) => {
+    const popup = new PopupWithImage('.popup_type_image', src, name);
+    popup.open();
+  }
+
+  const card = new Card(data, cardSelector, handleCardClick);
   wrap.prepend(card.getView());
 };
 
-const handleEscUp = (evt) => {
-  evt.preventDefault();
-  isEscEvent(evt, closeModalWindow);
-};
-
-const formSubmitHandler = (evt) => {
-  evt.preventDefault();
-  profileTitle.textContent = titleInputValue.value;
-  profileDescription.textContent = descriptionInputValue.value;
-  closeModalWindow(editFormModalWindow);
-};
-
-const cardFormSubmitHandler = (evt) => {
-  evt.preventDefault();
-  renderCard({
-    name: cardNameInputValue.value,
-    link: cardLinkInputValue.value
-  }, placesWrap);
-  closeModalWindow(cardFormModalWindow);
-};
-
-// EventListeners
-editFormModalWindow.addEventListener('submit', formSubmitHandler);
-cardFormModalWindow.addEventListener('submit', cardFormSubmitHandler);
-
-openEditFormButton.addEventListener('click', () => {
-  titleInputValue.value = profileTitle.textContent;
-  descriptionInputValue.value = profileDescription.textContent;
-  openModalWindow(editFormModalWindow);
-});
-
-openCardFormButton.addEventListener('click', () => {
-  openModalWindow(cardFormModalWindow);
-});
-
-editFormModalWindow.addEventListener('click', (evt) => {
-  if (evt.target.classList.contains('popup') || evt.target.classList.contains('popup__close')) {
-    closeModalWindow(editFormModalWindow);
-  }
-});
-cardFormModalWindow.addEventListener('click', (evt) => {
-  if (evt.target.classList.contains('popup') || evt.target.classList.contains('popup__close')) {
-    closeModalWindow(cardFormModalWindow);
-  }
-});
-imageModalWindow.addEventListener('click', (evt) => {
-  if (evt.target.classList.contains('popup') || evt.target.classList.contains('popup__close')) {
-    closeModalWindow(imageModalWindow);
-  }
-});
-
 // Инициализация
-initialCards.forEach((data) => {
-  renderCard(data, placesWrap)
-});
+const section = new Section({
+  items: initialCards, renderer: (data) => {
+    return renderCard(data, placesWrap);
+  }
+}, '.content');
 
-const editFormValidator = new FormValidator(defaultFormConfig, editFormModalWindow);
-const cardFormValidator = new FormValidator(defaultFormConfig, cardFormModalWindow);
+section.render();
 
-editFormValidator.enableValidation();
-cardFormValidator.enableValidation();
+const formSubmitCallback = (values) => {
+  const userInfo = new UserInfo({nameSelector: '.profile__title', descriptionSelector: '.profile__description'});
+  userInfo.setUserInfo(values);
+}
+const cardFormSubmitCallback = (values) => {
+  const { 'place-name': name, link } = values;
+  renderCard({name, link}, placesWrap);
+}
+
+const formSubmit = new PopupWithForm('.popup_type_edit', formSubmitCallback);
+const cardFormSubmit = new PopupWithForm('.popup_type_new-card', cardFormSubmitCallback);
+new FormValidator('.popup_type_edit').enableValidation();
+new FormValidator('.popup_type_new-card').enableValidation();
+
+const openEditFormButton = document.querySelector('.profile__edit-button');
+const openCardFormButton = document.querySelector('.profile__add-button');
+
+openEditFormButton.addEventListener('click', formSubmit.open);
+openCardFormButton.addEventListener('click', cardFormSubmit.open);
+

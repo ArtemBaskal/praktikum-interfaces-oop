@@ -24,11 +24,12 @@ const isEscEvent = (evt, action) => {
 // Как "Можно лучше" посоветуйте вынести эти функции и переменные в модуль utils.js и импортировать их в класс Card.
 
 class Card {
-  constructor(data, cardSelector) {
+  constructor(data, cardSelector, handleCardClick) {
     this._text = data.name;
     this._link = data.link;
 
     this._cardSelector = cardSelector;
+    this._handleCardClick = handleCardClick;
   }
 
   _getTemplate() {
@@ -69,12 +70,7 @@ class Card {
     // Эту зависимость студенты будут передавать как хендлер в конструктор класса.
     // Поэтому на данный момент они дублируют код из index.js в Card.js (Объявление переменных, функции)
 
-    imageElement.src = this._link;
-    imageElement.alt = `Изображение ${this._link}`;
-    imageCaption.textContent = this._text;
-
-    imageModalWindow.classList.add('popup_is-opened');
-    document.addEventListener('keyup', handleEscUp);
+    this._handleCardClick(this._link, this._text);
   }
 
   getView() {
