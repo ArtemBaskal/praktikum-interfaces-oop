@@ -1,19 +1,22 @@
 export default class Section {
   constructor({items, renderer}, containerSelector) {
-    this.items = items;
-    this.renderer = renderer;
-    this.containerSelector = containerSelector;
-    this.container = document.querySelector(containerSelector);
+    this._items = items;
+    this._renderer = renderer;
+    this._container = document.querySelector(containerSelector);
+
+    this._renderItemBinded = this._renderItem.bind(this);
   }
 
   addItem(element) {
-    this.items = items;
-    this.container.insertAdjacentHTML('beforeend', element);
+    this._renderItem(element);
+  }
+
+  _renderItem(item) {
+    const template = this._renderer(item);
+    this._container.prepend(template);
   }
 
   render() {
-    // items — это массив данных, которые нужно добавить на страницу при инициализации класса.
-    const markup = this.items.map(this.renderer);
-    this.container.insertAdjacentHTML('beforeend', markup);
+    this._items.forEach(this._renderItemBinded);
   }
 }

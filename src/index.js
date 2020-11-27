@@ -5,67 +5,34 @@ import Section from './Section.js';
 import {PopupWithForm} from "./PopupWithForm";
 import {PopupWithImage} from "./PopupWithImage";
 import {UserInfo} from "./UserInfo";
+import {initialCards} from "./consts";
 
-const initialCards = [
-  {
-    name: 'Архыз',
-    link: 'https://pictures.s3.yandex.net/frontend-developer/cards-compressed/arkhyz.jpg'
-  },
-  {
-    name: 'Челябинская область',
-    link: 'https://pictures.s3.yandex.net/frontend-developer/cards-compressed/chelyabinsk-oblast.jpg'
-  },
-  {
-    name: 'Иваново',
-    link: 'https://pictures.s3.yandex.net/frontend-developer/cards-compressed/ivanovo.jpg'
-  },
-  {
-    name: 'Камчатка',
-    link: 'https://pictures.s3.yandex.net/frontend-developer/cards-compressed/kamchatka.jpg'
-  },
-  {
-    name: 'Холмогорский район',
-    link: 'https://pictures.s3.yandex.net/frontend-developer/cards-compressed/kholmogorsky-rayon.jpg'
-  },
-  {
-    name: 'Байкал',
-    link: 'https://pictures.s3.yandex.net/frontend-developer/cards-compressed/baikal.jpg'
-  }
-];
-
-const placesWrap = document.querySelector('.places__list');
-
-const renderCard = (data, wrap) => {
-  const cardSelector = '.card-template';
+const renderCard = (data) => {
   const handleCardClick = (src, name) => {
     const popup = new PopupWithImage('.popup_type_image', src, name);
     popup.open();
   }
 
-  const card = new Card(data, cardSelector, handleCardClick);
-  wrap.prepend(card.getView());
+  const card = new Card(data, '.card-template', handleCardClick);
+  return card.getView();
 };
 
-// Инициализация
 const section = new Section({
-  items: initialCards, renderer: (data) => {
-    return renderCard(data, placesWrap);
-  }
-}, '.content');
-
+  items: initialCards, renderer: renderCard,
+}, '.places__list');
 section.render();
 
-const formSubmitCallback = (values) => {
+const formSubmit = new PopupWithForm('.popup_type_edit', (values) => {
   const userInfo = new UserInfo({nameSelector: '.profile__title', descriptionSelector: '.profile__description'});
   userInfo.setUserInfo(values);
-}
-const cardFormSubmitCallback = (values) => {
-  const {'place-name': name, link} = values;
-  renderCard({name, link}, placesWrap);
-}
+});
 
-const formSubmit = new PopupWithForm('.popup_type_edit', formSubmitCallback);
-const cardFormSubmit = new PopupWithForm('.popup_type_new-card', cardFormSubmitCallback);
+const cardFormSubmit = new PopupWithForm('.popup_type_new-card', (values) => {
+    const {'place-name': name, link} = values;
+    section.addItem({name, link});
+  }
+);
+
 new FormValidator('.popup_type_edit').enableValidation();
 new FormValidator('.popup_type_new-card').enableValidation();
 

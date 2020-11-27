@@ -1,15 +1,30 @@
 export class UserInfo {
   constructor({nameSelector, descriptionSelector}) {
-    this.name = document.querySelector(nameSelector);
-    this.description = document.querySelector(descriptionSelector);
+    this._name = document.querySelector(nameSelector);
+    this._description = document.querySelector(descriptionSelector);
   }
 
-  /* TODO: fill in form on open? */
   getUserInfo() {
     return {
-      name: this.name,
-      description: this.description,
+      name: this._getName(),
+      description: this._getDescription(),
     }
+  }
+
+  _setName(name){
+    this._name.textContent = name;
+  }
+
+  _setDescription(description){
+    this._description.textContent = description;
+  }
+
+  _getName(){
+    return this._name.textContent;
+  }
+
+  _getDescription(){
+    return this._description.textContent;
   }
 
   /**
@@ -17,7 +32,7 @@ export class UserInfo {
    * @param description {sring}
    */
   setUserInfo({name, description}) {
-    this.name.textContent = name;
-    this.description.textContent = description;
+    this._setName(name);
+    this._setDescription(description);
   }
 }

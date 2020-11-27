@@ -9,6 +9,7 @@ export class PopupWithForm extends Popup {
   }
 
   _handleSubmit(evt) {
+    evt.preventDefault();
     const values = this._getInputValues(evt);
     this._formSubmitCallback(values);
     this.close();
