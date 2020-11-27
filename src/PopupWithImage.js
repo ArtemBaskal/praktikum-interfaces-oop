@@ -3,15 +3,36 @@ import {Popup} from "./Popup";
 export class PopupWithImage extends Popup {
   constructor(popupSelector, src, name) {
     super(popupSelector);
-    this.src = src;
-    this.name = name;
+    this._src = src;
+    this._name = name;
+
+    this._image = this._popup.querySelector('.popup__image');
+    this._caption = this._popup.querySelector('.popup__caption');
+  }
+
+  _setImageSrc(src) {
+    this._image.src = src;
+  };
+
+  _setImageCaption(name) {
+    this._caption.textContent = name;
+  }
+
+  _setContent(src, name) {
+    this._setImageSrc(src)
+    this._setImageCaption(name);
   }
 
   open() {
-    this.popup.classList.add('popup_is-opened');
-    document.addEventListener('keydown', (evt) => this._handleEscClose(evt));
+    super.open();
+    this._setContent(this._src, this._name);
+  }
 
-    this.popup.querySelector('.popup__image').src = this.src;
-    this.popup.querySelector('.popup__caption').textContent = this.name;
+  close() {
+    super.close();
+
+    const defaultSrc = '/';
+    const defaultCaption = '';
+    this._setContent(defaultSrc, defaultCaption);
   }
 }

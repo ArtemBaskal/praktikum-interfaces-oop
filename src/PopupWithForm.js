@@ -3,12 +3,18 @@ import {Popup} from "./Popup";
 export class PopupWithForm extends Popup {
   constructor(popupSelector, formSubmitCallback) {
     super(popupSelector);
-    this.setEventListeners();
-    this.formSubmitCallback = formSubmitCallback;
+    this._form = this._popup.querySelector('.popup__form');
+    this._formSubmitCallback = formSubmitCallback;
+    this._handleSubmitBinded = this._handleSubmit.bind(this);
+  }
+
+  _handleSubmit(evt) {
+    const values = this._getInputValues(evt);
+    this._formSubmitCallback(values);
+    this.close();
   }
 
   _getInputValues(evt) {
-    /* TODO: simplify? */
     return Array.from(evt.target.elements).filter(({tagName}) => tagName === "INPUT")
       .reduce((acc, {name, value}) => {
         acc[name] = value;
@@ -16,22 +22,18 @@ export class PopupWithForm extends Popup {
       }, {})
   }
 
-  _onSubmit(evt) {
-    const values = this._getInputValues(evt);
-    this.formSubmitCallback(values);
-    this.close();
-  };
+  _resetForm() {
+    this._form.reset();
+    this._form.removeEventListener('submit', this._handleSubmitBinded);
+  }
 
   setEventListeners() {
     super.setEventListeners();
-    this.popup.addEventListener('submit', (evt) => this._onSubmit(evt));
+    this._form.addEventListener('submit', this._handleSubmitBinded);
   }
 
-  close() {
-    this.popup.classList.remove('popup_is-opened');
-    document.removeEventListener('keydown', () => this._handleEscClose());
-
-    this.popup.removeEventListener('submit', this._onSubmit);
-    this.popup.querySelector('.popup__form').reset();
+  removeEventListeners() {
+    super.removeEventListeners();
+    this._resetForm();
   }
 }

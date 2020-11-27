@@ -1,19 +1,22 @@
 export class Popup {
-    /* TODO: rename to private props */
     constructor(popupSelector) {
-        this.popup = document.querySelector(popupSelector);
-        this.closeIcon = this.popup.querySelector('.popup__close');
-        this.setEventListeners();
+        this._popup = document.querySelector(popupSelector);
+        this._popupContent = this._popup.querySelector('.popup__content');
+        this._popupCloseElement = this._popup.querySelector('.popup__close');
+
+        this._openFlagClass = 'popup_is-opened';
+        this._handleEscCloseBinded = this._handleEscClose.bind(this);
+        this._closeBinded = this.close.bind(this);
     }
 
     open() {
-        this.popup.classList.add('popup_is-opened');
-        document.addEventListener('keydown', (evt) => this._handleEscClose(evt));
+        this._popup.classList.add(this._openFlagClass);
+        this.setEventListeners();
     }
 
     close() {
-        this.popup.classList.remove('popup_is-opened');
-        document.removeEventListener('keydown', (evt) => this._handleEscClose(evt));
+        this._popup.classList.remove(this._openFlagClass);
+        this.removeEventListeners();
     }
 
     _handleEscClose(evt) {
@@ -22,7 +25,25 @@ export class Popup {
         }
     }
 
-    setEventListeners() {
-        this.closeIcon.addEventListener('click', () => this.close());
-    }
+  _handleOverlayClick() {
+    const onClick = (evt) => {
+      if (!this._popupContent.contains(evt.target)) {
+        this._popup.removeEventListener("click", onClick);
+        this.close()
+      }
+    };
+
+    this._popup.addEventListener("click", onClick);
+  }
+
+  setEventListeners() {
+        this._popupCloseElement.addEventListener('click', this._closeBinded);
+        document.addEventListener('keydown', this._handleEscCloseBinded);
+        this._handleOverlayClick();
+  }
+
+  removeEventListeners() {
+        this._popupCloseElement.removeEventListener('click', this._closeBinded);
+        document.removeEventListener('keydown', this._handleEscCloseBinded);
+  }
 }
