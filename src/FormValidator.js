@@ -1,12 +1,21 @@
+const defaultConfig = {
+  formSelector: '.popup__form',
+  inputSelector: '.popup__input',
+  submitButtonSelector: '.popup__button',
+  inactiveButtonClass: 'popup__button_disabled',
+  inputErrorClass: 'popup__input_type_error',
+  errorClass: 'popup__error_visible'
+};
+
 class FormValidator {
-  constructor(config, popupElement) {
+  constructor(popupElement, config = defaultConfig) {
     this._inputSelector = config.inputSelector;
     this._submitButtonSelector = config.submitButtonSelector;
     this._inactiveButtonClass = config.inactiveButtonClass;
     this._inputErrorClass = config.inputErrorClass;
     this._errorClass = config.errorClass;
 
-    this._element = popupElement;
+    this._element = document.querySelector(popupElement);
   }
 
   _checkInputValidity(inputElement) {
@@ -33,7 +42,7 @@ class FormValidator {
   }
 
   _toggleButtonState() {
-    if (this._getInvalidInput) {
+    if (this._getInvalidInput()) {
       this._buttonElement.classList.add(this._inactiveButtonClass);
       this._buttonElement.disabled = true;
     } else {
